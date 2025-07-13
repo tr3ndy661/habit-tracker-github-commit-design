@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carousel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #img {
+            width: 300px;
+            height: auto;
+            display: block;
+            margin: 0 auto 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            margin: 0 10px;
+        }
+        button:hover {
+            background-color: #f0f0f0;
+        }
+        #next, #previous {
+            display: inline-block;
+        }
+        #next {
+            float: right;
+        }
+        #previous {
+            float: left;
+        }
+        #img {
+            transition: transform 0.5s ease;
+        }
+        #img:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <img src="img1.webp" alt="img1" id="img">
+
+    <button id="next">Next</button>
+    <button id="previous">Previous</button>
+
+    <script>
+        let images = ['img2.png', 'im3.jpg', 'img4.png'];
+        let start = 0;
+
+       let img = document.getElementById('img');
+       let next = document.getElementById('next');
+       let previous = document.getElementById('previous');
+
+       next.addEventListener('click', function() {
+        if (start < images.length-1){
+            start += 1;
+            img.src = images[start];
+        }
+        else {
+            start = 0;
+            img.src = images[start];
+        }
+       })
+
+       previous.addEventListener('click', function() {
+        if (start > 0){
+            start -= 1;
+            img.src = images[start];
+        }
+        else {
+            start = images.length;
+            img.src = images[start];
+        }
+       })
+    </script>
+</body>
+</html>
