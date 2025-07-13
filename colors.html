@@ -4,11 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>color changer</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #redButton {
+            background-color: red;
+            color: white;
+        }
+
+        #blueButton {
+            background-color: blue;
+            color: white;
+        }
+
+        #greenButton {
+            background-color: green;
+            color: white;
+        }
+        #redButton:hover {
+            background-color: darkred;
+        }
+
+        #blueButton:hover {
+            background-color: darkblue;
+        }
+        #greenButton:hover {
+            background-color: darkgreen;
+        }
+    </style>
 </head>
 <body>
     <button id="redButton">Red</button>
     <button id="blueButton">Blue</button>
     <button id="greenButton">Green</button>
-    
+
+    <script>
+        let redButton = document.getElementById('redButton');
+        let blueButton = document.getElementById('blueButton');
+        let greenButton = document.getElementById('greenButton');
+
+        redButton.addEventListener('click', function() {
+            document.body.style.backgroundColor = 'red';
+        });
+
+        blueButton.addEventListener('click', function() {
+            document.body.style.backgroundColor = 'blue';
+        });
+
+        greenButton.addEventListener('click', function() {
+            document.body.style.backgroundColor = 'green';
+        });
+        
+    </script>
 </body>
 </html>
