@@ -42,6 +42,30 @@
             margin-top: 10px;
             padding: 10px;
             border-radius: 5px;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        li.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        li span {
+            flex: 1;
+            margin-left: 10px;
+            text-align: left;
+        }
+        li button {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        li button:hover {
+            background-color: #cc0000;
         }
         #clear-all-btn {
             margin-top: 20px;
@@ -79,7 +103,8 @@
         <button id="clear-all-btn">Clear all</button>
 
         <script>
-            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            // Note: localStorage is not available in Claude artifacts, so using in-memory storage
+            let tasks = [];
             const taskForm = document.getElementById('task-form');
             const taskInput = document.getElementById('task-input');
             const taskList = document.getElementById('task-list');
@@ -107,28 +132,28 @@
                     });
                     taskList.appendChild(li);
                 });
-                localStorage.setItem('tasks', JSON.stringify(tasks)); // Save to localStorage
+                // Note: localStorage would be used here in a real environment
             }
             renderTasks(); // Initial render
 
             taskForm.addEventListener('submit', (event) => {
                 event.preventDefault();
-                const text = task.taskInput.value.trim();
+                const text = taskInput.value.trim(); // Fixed: was task.taskInput
                 if (text !== '') {
-                    tasks.push ({
+                    tasks.push({
                         id: Date.now(), // Unique ID
                         text: text,
                         completed: false
-                    })
+                    });
                     taskInput.value = '';
                     renderTasks();
                 }
-            })
+            });
 
             clearAllBtn.addEventListener('click', function(){
-                task.length = 0;
+                tasks.length = 0; // Fixed: was task.length
                 renderTasks();
-            })
+            });
         </script>
     </div>
 
