@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo</title>
+    <!-- darkmode todo list styling, the colors are supposed to be  bg is #070738, add task btn color #558bd9, all text white for btns and color for clear btn is red, li color is #ffffff , -->
+    <style>
+        body {
+            background-color: #070738;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #todo-app {
+            width: 300px;
+            margin: 50px auto;
+            text-align: center;
+        }
+        #task-input {
+            width: 70%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        #add-btn {
+            padding: 10px 15px;
+            background-color: #558bd9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #add-btn:hover {
+            background-color: #467bbf;
+        }
+        #task-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #ffffff;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #clear-all-btn {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #clear-all-btn:hover {
+            background-color: darkred;
+        }
+        #task-form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        #task-form input {
+            flex: 1;
+            margin-right: 10px;
+        }
+        #task-form button {
+            flex: 0 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="todo-app">
+        <form id="task-form">
+            <input type="text" placeholder="Add a new task..." id="task-input">
+            <button id="add-btn">Add Task</button>
+        </form>
+        <ul id="task-list"></ul>
+        <button id="clear-all-btn">Clear all</button>
+
+        <script>
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const taskForm = document.getElementById('task-form');
+            const taskInput = document.getElementById('task-input');
+            const taskList = document.getElementById('task-list');
+            const clearAllBtn = document.getElementById('clear-all-btn');   
+            
+            function renderTasks() {
+                taskList.innerHTML = ''; // Clear the list
+                tasks.forEach(task => {
+                    const li = document.createElement('li');
+                    if (task.completed) li.classList.add('completed');
+                    li.innerHTML = `
+                        <input type="checkbox" ${task.completed ? 'checked' : ''}>
+                        <span>${task.text}</span>
+                        <button>Delete</button>
+                    `;
+                    // Toggle completion
+                    li.querySelector('input').addEventListener('change', () => {
+                        task.completed = !task.completed;
+                        renderTasks();
+                    });
+                    // Delete task
+                    li.querySelector('button').addEventListener('click', () => {
+                        tasks.splice(tasks.indexOf(task), 1);
+                        renderTasks();
+                    });
+                    taskList.appendChild(li);
+                });
+                localStorage.setItem('tasks', JSON.stringify(tasks)); // Save to localStorage
+            }
+            renderTasks(); // Initial render
+
+            taskForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const text = task.taskInput.value.trim();
+                if (text !== '') {
+                    tasks.push ({
+                        id: Date.now(), // Unique ID
+                        text: text,
+                        completed: false
+                    })
+                    taskInput.value = '';
+                    renderTasks();
+                }
+            })
+
+            clearAllBtn.addEventListener('click', function(){
+                task.length = 0;
+                renderTasks();
+            })
+        </script>
+    </div>
+
+</body>
+</html>
