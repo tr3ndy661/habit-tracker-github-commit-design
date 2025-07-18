@@ -393,6 +393,7 @@
                 width: 100%;
             }
         }
+        
     </style>
 </head>
 <body>
@@ -783,52 +784,45 @@
                 };
                 reader.readAsDataURL(file);
 
-                // Initialize Tesseract
-                const worker = Tesseract.createWorker({
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            const progress = Math.round(m.progress * 100);
-                            ocrProgressFill.style.width = (20 + progress * 0.7) + '%';
-                            ocrStatus.textContent = `Recognizing text... ${progress}%`;
+                // Use Tesseract.recognize directly (modern API)
+                Tesseract.recognize(
+                    file,
+                    'eng',
+                    {
+                        logger: m => {
+                            console.log(m);
+                            if (m.status === 'recognizing text') {
+                                const progress = Math.round(m.progress * 100);
+                                ocrProgressFill.style.width = (20 + progress * 0.7) + '%';
+                                ocrStatus.textContent = `Recognizing text... ${progress}%`;
+                            } else if (m.status === 'loading tesseract core') {
+                                ocrStatus.textContent = 'Loading OCR engine...';
+                                ocrProgressFill.style.width = '20%';
+                            } else if (m.status === 'initializing tesseract') {
+                                ocrStatus.textContent = 'Initializing OCR...';
+                                ocrProgressFill.style.width = '30%';
+                            } else if (m.status === 'initializing api') {
+                                ocrStatus.textContent = 'Setting up OCR...';
+                                ocrProgressFill.style.width = '40%';
+                            } else if (m.status === 'loading language traineddata') {
+                                ocrStatus.textContent = 'Loading language data...';
+                                ocrProgressFill.style.width = '50%';
+                            }
                         }
                     }
-                });
-
-                (async () => {
-                    try {
-                        ocrStatus.textContent = 'Loading OCR engine...';
-                        ocrProgressFill.style.width = '20%';
-                        await worker.load();
-                        
-                        ocrStatus.textContent = 'Loading language data...';
-                        ocrProgressFill.style.width = '30%';
-                        await worker.loadLanguage('eng');
-                        
-                        ocrStatus.textContent = 'Initializing OCR...';
-                        ocrProgressFill.style.width = '40%';
-                        await worker.initialize('eng');
-                        
-                        ocrStatus.textContent = 'Processing image...';
-                        ocrProgressFill.style.width = '50%';
-                        
-                        const { data: { text } } = await worker.recognize(file);
-                        
-                        ocrStatus.textContent = 'OCR Complete!';
-                        ocrProgressFill.style.width = '100%';
-                        
-                        await worker.terminate();
-                        
-                        setTimeout(() => {
-                            ocrProgress.classList.remove('show');
-                        }, 2000);
-                        
-                        resolve(text);
-                    } catch (error) {
-                        await worker.terminate();
+                ).then(({ data: { text } }) => {
+                    ocrStatus.textContent = 'OCR Complete!';
+                    ocrProgressFill.style.width = '100%';
+                    
+                    setTimeout(() => {
                         ocrProgress.classList.remove('show');
-                        reject(new Error('OCR processing failed: ' + error.message));
-                    }
-                })();
+                    }, 2000);
+                    
+                    resolve(text);
+                }).catch(error => {
+                    ocrProgress.classList.remove('show');
+                    reject(new Error('OCR processing failed: ' + error.message));
+                });
             });
         }
 
