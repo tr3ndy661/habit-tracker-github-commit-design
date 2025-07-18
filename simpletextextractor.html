@@ -7,6 +7,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -22,7 +24,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -52,6 +54,24 @@
 
         .main-content {
             padding: 40px;
+        }
+
+        .supported-formats {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .supported-formats h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .format-list {
+            color: #856404;
+            font-size: 0.9rem;
         }
 
         .upload-section {
@@ -103,6 +123,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            margin-right: 10px;
         }
 
         .upload-btn:hover {
@@ -110,17 +131,87 @@
             box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
         }
 
-        .file-info {
-            background: #e8f4f8;
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .files-queue {
+            background: #f8f9fa;
             border-radius: 10px;
             padding: 20px;
             margin: 20px 0;
             display: none;
         }
 
-        .file-info.show {
+        .files-queue.show {
             display: block;
             animation: fadeIn 0.5s ease;
+        }
+
+        .file-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-info-item {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .file-status {
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #ffeaa7;
+            color: #856404;
+        }
+
+        .status-processing {
+            background: #74b9ff;
+            color: white;
+        }
+
+        .status-complete {
+            background: #00b894;
+            color: white;
+        }
+
+        .status-error {
+            background: #e17055;
+            color: white;
         }
 
         .progress-bar {
@@ -137,6 +228,43 @@
             width: 0%;
             transition: width 0.3s ease;
             border-radius: 10px;
+        }
+
+        .ocr-progress {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .ocr-progress.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .ocr-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e3f2fd;
+            border-top: 2px solid #2196f3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 2px solid #dee2e6;
         }
 
         .output-section {
@@ -177,32 +305,14 @@
             border: 1px solid #dee2e6;
             border-radius: 10px;
             padding: 20px;
-            min-height: 200px;
+            min-height: 300px;
             font-family: 'Courier New', monospace;
             font-size: 0.9rem;
             line-height: 1.6;
             white-space: pre-wrap;
             overflow-y: auto;
-            max-height: 400px;
+            max-height: 500px;
             resize: vertical;
-        }
-
-        .supported-formats {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-
-        .supported-formats h3 {
-            color: #856404;
-            margin-bottom: 10px;
-        }
-
-        .format-list {
-            color: #856404;
-            font-size: 0.9rem;
         }
 
         .error-message {
@@ -225,9 +335,42 @@
             display: none;
         }
 
+        .process-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .process-btn {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+
+        .process-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .process-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -243,6 +386,12 @@
             .main-content {
                 padding: 20px;
             }
+            
+            .upload-btn, .clear-btn {
+                display: block;
+                margin: 5px 0;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -250,7 +399,7 @@
     <div class="container">
         <div class="header">
             <h1>📄 Text Extractor</h1>
-            <p>Extract text from various file formats with ease</p>
+            <p>Extract text from various file formats with ease - Multiple files supported!</p>
         </div>
         
         <div class="main-content">
@@ -258,8 +407,9 @@
                 <h3>📋 Supported Formats</h3>
                 <p class="format-list">
                     <strong>Text Files:</strong> .txt, .md, .csv<br>
-                    <strong>Documents:</strong> .docx, .doc<br>
+                    <strong>Documents:</strong> .docx, .doc, .pptx<br>
                     <strong>Spreadsheets:</strong> .xlsx, .xls<br>
+                    <strong>Images:</strong> .jpg, .jpeg, .png, .bmp, .gif, .tiff<br>
                     <strong>Web:</strong> .html, .xml<br>
                     <strong>Other:</strong> .json, .js, .css, .py, .java, .cpp
                 </p>
@@ -268,49 +418,67 @@
             <div class="upload-section" id="uploadSection">
                 <div class="upload-icon">📁</div>
                 <div class="upload-text">
-                    Drag and drop your file here or click to browse
+                    Drag and drop multiple files here or click to browse
                 </div>
                 <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                    Choose File
+                    Add Files
                 </button>
-                <input type="file" id="fileInput" class="file-input" accept=".txt,.docx,.doc,.xlsx,.xls,.html,.xml,.json,.js,.css,.py,.java,.cpp,.md,.csv">
+                <button class="clear-btn" onclick="clearFiles()">
+                    Clear All
+                </button>
+                <input type="file" id="fileInput" class="file-input" multiple accept=".txt,.docx,.doc,.pptx,.xlsx,.xls,.html,.xml,.json,.js,.css,.py,.java,.cpp,.md,.csv,.jpg,.jpeg,.png,.bmp,.gif,.tiff">
             </div>
 
-            <div class="file-info" id="fileInfo">
-                <div><strong>File:</strong> <span id="fileName"></span></div>
-                <div><strong>Size:</strong> <span id="fileSize"></span></div>
-                <div><strong>Type:</strong> <span id="fileType"></span></div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+            <div class="files-queue" id="filesQueue">
+                <h3>📋 Files Queue</h3>
+                <div id="filesList"></div>
+                <div class="process-controls">
+                    <button class="process-btn" id="processBtn" onclick="processAllFiles()">
+                        Process All Files
+                    </button>
                 </div>
-                <div id="statusText">Processing...</div>
             </div>
 
             <div class="error-message" id="errorMessage"></div>
             <div class="success-message" id="successMessage"></div>
 
+            <div class="ocr-progress" id="ocrProgress">
+                <div class="ocr-status">
+                    <div class="spinner"></div>
+                    <span id="ocrStatus">Processing image...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="ocrProgressFill"></div>
+                </div>
+                <img id="imagePreview" class="image-preview" style="display: none;">
+            </div>
+
             <div class="output-section">
                 <div class="output-header">
                     <h2 class="output-title">📝 Extracted Text</h2>
-                    <button class="copy-btn" id="copyBtn" onclick="copyText()">Copy Text</button>
+                    <button class="copy-btn" id="copyBtn" onclick="copyText()">Copy All Text</button>
                 </div>
-                <textarea class="text-output" id="textOutput" placeholder="Extracted text will appear here..." readonly></textarea>
+                <textarea class="text-output" id="textOutput" placeholder="Extracted text from all files will appear here..." readonly></textarea>
             </div>
         </div>
     </div>
 
     <script>
+        // Global variables
         const uploadSection = document.getElementById('uploadSection');
         const fileInput = document.getElementById('fileInput');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
-        const fileType = document.getElementById('fileType');
-        const progressFill = document.getElementById('progressFill');
-        const statusText = document.getElementById('statusText');
+        const filesQueue = document.getElementById('filesQueue');
+        const filesList = document.getElementById('filesList');
+        const processBtn = document.getElementById('processBtn');
         const textOutput = document.getElementById('textOutput');
         const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
+        const ocrProgress = document.getElementById('ocrProgress');
+        const ocrStatus = document.getElementById('ocrStatus');
+        const ocrProgressFill = document.getElementById('ocrProgressFill');
+        const imagePreview = document.getElementById('imagePreview');
+
+        let filesData = [];
 
         // Drag and drop functionality
         uploadSection.addEventListener('dragover', (e) => {
@@ -325,22 +493,21 @@
         uploadSection.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadSection.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFile(files[0]);
-            }
+            const files = Array.from(e.dataTransfer.files);
+            addFilesToQueue(files);
         });
 
         // File input change
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
-            }
+            const files = Array.from(e.target.files);
+            addFilesToQueue(files);
         });
 
         // Click to browse
-        uploadSection.addEventListener('click', () => {
-            fileInput.click();
+        uploadSection.addEventListener('click', (e) => {
+            if (e.target === uploadSection || e.target.classList.contains('upload-icon') || e.target.classList.contains('upload-text')) {
+                fileInput.click();
+            }
         });
 
         function formatFileSize(bytes) {
@@ -369,75 +536,129 @@
             }, 3000);
         }
 
-        function updateProgress(percent) {
-            progressFill.style.width = percent + '%';
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            ocrProgress.classList.remove('show');
         }
 
-        async function handleFile(file) {
-            // Reset UI
+        function addFilesToQueue(files) {
+            files.forEach(file => {
+                const fileId = Date.now() + Math.random();
+                const fileData = {
+                    id: fileId,
+                    file: file,
+                    status: 'pending',
+                    text: '',
+                    error: null
+                };
+                filesData.push(fileData);
+            });
+            updateFilesDisplay();
+            filesQueue.classList.add('show');
+        }
+
+        function updateFilesDisplay() {
+            filesList.innerHTML = '';
+            filesData.forEach(fileData => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info-item">
+                        <div class="file-name">${fileData.file.name}</div>
+                        <div class="file-details">${formatFileSize(fileData.file.size)} • ${fileData.file.type || 'Unknown type'}</div>
+                    </div>
+                    <div class="file-status status-${fileData.status}">${fileData.status.toUpperCase()}</div>
+                `;
+                filesList.appendChild(fileItem);
+            });
+
+            processBtn.disabled = filesData.length === 0 || filesData.some(f => f.status === 'processing');
+        }
+
+        function clearFiles() {
+            filesData = [];
+            updateFilesDisplay();
+            filesQueue.classList.remove('show');
+            textOutput.value = '';
+            hideMessages();
+        }
+
+        async function processAllFiles() {
+            if (filesData.length === 0) {
+                showError('No files to process');
+                return;
+            }
+
             hideMessages();
             textOutput.value = '';
-            
-            // Show file info
-            fileName.textContent = file.name;
-            fileSize.textContent = formatFileSize(file.size);
-            fileType.textContent = file.type || 'Unknown';
-            fileInfo.classList.add('show');
-            
-            updateProgress(10);
-            statusText.textContent = 'Reading file...';
+            let allExtractedText = '';
 
-            try {
-                const extension = file.name.split('.').pop().toLowerCase();
-                let text = '';
+            for (let i = 0; i < filesData.length; i++) {
+                const fileData = filesData[i];
+                fileData.status = 'processing';
+                updateFilesDisplay();
 
-                updateProgress(30);
-
-                switch (extension) {
-                    case 'txt':
-                    case 'md':
-                    case 'csv':
-                    case 'js':
-                    case 'css':
-                    case 'html':
-                    case 'xml':
-                    case 'json':
-                    case 'py':
-                    case 'java':
-                    case 'cpp':
-                        text = await readTextFile(file);
-                        break;
-                    case 'docx':
-                        text = await readDocxFile(file);
-                        break;
-                    case 'xlsx':
-                    case 'xls':
-                        text = await readExcelFile(file);
-                        break;
-                    default:
-                        throw new Error(`Unsupported file format: .${extension}`);
+                try {
+                    const text = await processFile(fileData.file);
+                    fileData.text = text;
+                    fileData.status = 'complete';
+                    
+                    // Add to combined output
+                    if (allExtractedText) allExtractedText += '\n\n';
+                    allExtractedText += `=== ${fileData.file.name} ===\n${text}`;
+                    
+                } catch (error) {
+                    fileData.error = error.message;
+                    fileData.status = 'error';
+                    console.error(`Error processing ${fileData.file.name}:`, error);
                 }
+                
+                updateFilesDisplay();
+                textOutput.value = allExtractedText;
+            }
 
-                updateProgress(80);
-                statusText.textContent = 'Processing text...';
+            const successCount = filesData.filter(f => f.status === 'complete').length;
+            const errorCount = filesData.filter(f => f.status === 'error').length;
+            
+            if (successCount > 0) {
+                showSuccess(`Successfully processed ${successCount} file(s). ${errorCount > 0 ? `${errorCount} file(s) had errors.` : ''}`);
+            } else {
+                showError('Failed to process any files');
+            }
+        }
 
-                // Clean and format text
-                text = text.trim();
-                if (!text) {
-                    throw new Error('No text found in the file');
-                }
-
-                updateProgress(100);
-                statusText.textContent = 'Complete!';
-
-                textOutput.value = text;
-                showSuccess(`Successfully extracted ${text.length} characters from ${file.name}`);
-
-            } catch (error) {
-                console.error('Error processing file:', error);
-                showError(`Error: ${error.message}`);
-                updateProgress(0);
-                statusText.textContent = 'Error occurred';
+        async function processFile(file) {
+            const extension = file.name.split('.').pop().toLowerCase();
+            
+            // Check if it's an image file
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'bmp', 'gif', 'tiff'];
+            if (imageExtensions.includes(extension)) {
+                return await extractTextFromImage(file);
+            }
+            
+            switch (extension) {
+                case 'txt':
+                case 'md':
+                case 'csv':
+                case 'js':
+                case 'css':
+                case 'html':
+                case 'xml':
+                case 'json':
+                case 'py':
+                case 'java':
+                case 'cpp':
+                    return await readTextFile(file);
+                case 'docx':
+                    return await readDocxFile(file);
+                case 'pptx':
+                    return await readPptxFile(file);
+                case 'xlsx':
+                case 'xls':
+                    return await readExcelFile(file);
+                default:
+                    throw new Error(`Unsupported file format: .${extension}`);
             }
         }
 
@@ -467,6 +688,61 @@
             });
         }
 
+        async function readPptxFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const zip = new JSZip();
+                        const zipFile = await zip.loadAsync(arrayBuffer);
+                        
+                        let allText = '';
+                        const slideFiles = [];
+                        
+                        // Find all slide files
+                        zipFile.forEach((relativePath, file) => {
+                            if (relativePath.startsWith('ppt/slides/slide') && relativePath.endsWith('.xml')) {
+                                slideFiles.push(relativePath);
+                            }
+                        });
+                        
+                        // Sort slides by number
+                        slideFiles.sort((a, b) => {
+                            const numA = parseInt(a.match(/slide(\d+)\.xml/)[1]);
+                            const numB = parseInt(b.match(/slide(\d+)\.xml/)[1]);
+                            return numA - numB;
+                        });
+                        
+                        // Extract text from each slide
+                        for (let i = 0; i < slideFiles.length; i++) {
+                            const slideFile = slideFiles[i];
+                            const slideXml = await zipFile.file(slideFile).async('string');
+                            const slideNumber = slideFile.match(/slide(\d+)\.xml/)[1];
+                            
+                            // Extract text from XML using regex
+                            const textMatches = slideXml.match(/<a:t[^>]*>([^<]+)<\/a:t>/g);
+                            if (textMatches) {
+                                allText += `\n--- Slide ${slideNumber} ---\n`;
+                                textMatches.forEach(match => {
+                                    const text = match.replace(/<[^>]*>/g, '').trim();
+                                    if (text) {
+                                        allText += text + '\n';
+                                    }
+                                });
+                            }
+                        }
+                        
+                        resolve(allText.trim());
+                    } catch (error) {
+                        reject(new Error('Failed to extract text from PowerPoint file: ' + error.message));
+                    }
+                };
+                reader.onerror = () => reject(new Error('Failed to read PowerPoint file'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
         async function readExcelFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -492,9 +768,68 @@
             });
         }
 
-        function hideMessages() {
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
+        async function extractTextFromImage(file) {
+            return new Promise((resolve, reject) => {
+                // Show OCR progress
+                ocrProgress.classList.add('show');
+                ocrStatus.textContent = 'Initializing OCR...';
+                ocrProgressFill.style.width = '10%';
+
+                // Show image preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+
+                // Initialize Tesseract
+                const worker = Tesseract.createWorker({
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            const progress = Math.round(m.progress * 100);
+                            ocrProgressFill.style.width = (20 + progress * 0.7) + '%';
+                            ocrStatus.textContent = `Recognizing text... ${progress}%`;
+                        }
+                    }
+                });
+
+                (async () => {
+                    try {
+                        ocrStatus.textContent = 'Loading OCR engine...';
+                        ocrProgressFill.style.width = '20%';
+                        await worker.load();
+                        
+                        ocrStatus.textContent = 'Loading language data...';
+                        ocrProgressFill.style.width = '30%';
+                        await worker.loadLanguage('eng');
+                        
+                        ocrStatus.textContent = 'Initializing OCR...';
+                        ocrProgressFill.style.width = '40%';
+                        await worker.initialize('eng');
+                        
+                        ocrStatus.textContent = 'Processing image...';
+                        ocrProgressFill.style.width = '50%';
+                        
+                        const { data: { text } } = await worker.recognize(file);
+                        
+                        ocrStatus.textContent = 'OCR Complete!';
+                        ocrProgressFill.style.width = '100%';
+                        
+                        await worker.terminate();
+                        
+                        setTimeout(() => {
+                            ocrProgress.classList.remove('show');
+                        }, 2000);
+                        
+                        resolve(text);
+                    } catch (error) {
+                        await worker.terminate();
+                        ocrProgress.classList.remove('show');
+                        reject(new Error('OCR processing failed: ' + error.message));
+                    }
+                })();
+            });
         }
 
         function copyText() {
@@ -515,7 +850,7 @@
         }
 
         // Initialize
-        updateProgress(0);
+        updateFilesDisplay();
     </script>
 </body>
 </html>
